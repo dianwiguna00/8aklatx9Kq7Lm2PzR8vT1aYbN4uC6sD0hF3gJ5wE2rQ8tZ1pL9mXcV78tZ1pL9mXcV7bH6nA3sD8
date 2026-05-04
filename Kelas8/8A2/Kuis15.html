@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Kuis Matematika</title>
+
+<style>
+*{box-sizing:border-box}
+body{
+  margin:0;
+  font-family:Arial,sans-serif;
+  background:linear-gradient(135deg,#74ebd5,#ACB6E5);
+}
+.container{
+  max-width:95%;
+  margin:15px auto;
+  background:#fff;
+  padding:16px;
+  border-radius:18px;
+  text-align:center;
+}
+.timer{
+  font-size:22px;
+  font-weight:bold;
+  color:#d9534f;
+}
+.question{
+  text-align:left;
+  font-size:22px;
+  white-space:pre-line;
+  margin-top:10px;
+}
+
+/* FRAME SOAL */
+.question-frame{
+  background:#f8fbff;
+  border:3px solid #2196f3;
+  border-radius:18px;
+  padding:18px;
+  margin-top:15px;
+  box-shadow:0 6px 16px rgba(0,0,0,.1);
+}
+.question-frame::before{
+  content:"📌 Soal";
+  display:inline-block;
+  background:#2196f3;
+  color:#fff;
+  padding:4px 14px;
+  border-radius:20px;
+  font-size:14px;
+  font-weight:bold;
+  margin-bottom:10px;
+}
+
+.question-img,
+.focus-img{
+  max-width:300px;
+  border-radius:12px;
+  margin:12px auto;
+  display:none;
+}
+
+.options,.focusOptions{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:12px;
+  margin-top:16px;
+}
+.optionBtn{
+  padding:14px;
+  font-size:18px;
+  border:none;
+  border-radius:12px;
+  color:#fff;
+  font-weight:bold;
+  cursor:pointer;
+}
+.btnA{background:#1e88e5}
+.btnB{background:#43a047}
+.btnC{background:#fb8c00}
+.btnD{background:#8e24aa}
+.correct{background:#2ecc71!important}
+.wrong{background:#e74c3c!important}
+
+button{
+  margin:6px;
+  padding:10px 16px;
+  border:none;
+  border-radius:12px;
+  background:#4caf50;
+  color:#fff;
+  cursor:pointer;
+}
+
+#focusLayer{
+  display:none;
+  position:fixed;
+  inset:0;
+  background:#fff;
+  z-index:9999;
+  padding:16px;
+}
+.focusBox{max-width:800px;margin:auto}
+.focusOption{
+  padding:12px;
+  border-radius:10px;
+  color:#fff;
+  font-weight:bold;
+}
+.focusP{
+  background:#f9fbff;
+  border-left:5px solid #2196f3;
+  padding:15px;
+  border-radius:10px;
+  margin-top:12px;
+}
+
+@media(max-width:768px){
+  .options,.focusOptions{grid-template-columns:1fr}
+}
+</style>
+</head>
+
+<body>
+
+<div id="quiz" class="container">
+  <h1>🎮 Kuis Matematika</h1>
+
+  <div id="timer" class="timer"></div>
+  <div id="questionNumber"></div>
+
+  <div class="question-frame">
+    <div id="question" class="question"></div>
+    <img id="questionImg" class="question-img">
+  </div>
+
+  <div id="options" class="options"></div>
+
+  <button onclick="prevQuestion()">◀ Sebelumnya</button>
+  <button onclick="nextQuestion()">▶ Berikutnya</button>
+  <button onclick="showFocus()">📘 Pembahasan</button>
+
+  <div id="feedback"></div>
+</div>
+
+<!-- PEMBAHASAN -->
+<div id="focusLayer">
+  <div class="focusBox">
+    <div class="question-frame">
+      <div id="focusQuestion" class="question"></div>
+      <img id="focusImg" class="focus-img">
+    </div>
+    <div id="focusOptions" class="focusOptions"></div>
+    <div id="focusPembahasan" class="focusP"></div>
+    <button onclick="closeFocus()">⬅ Kembali</button>
+  </div>
+</div>
+
+<script>
+let questions=[
+{
+q:"Sebuah limas segitiga memiliki alas berbentuk segitiga dengan panjang alas 6 cm dan tinggi segitiga 4 cm. Tinggi limas adalah 10 cm. Hitung volumenya.",
+options:\["24 cm³","36 cm³","40 cm³","48 cm³"],
+correct:"40 cm³",
+p:"Luas alas segitiga = 1/2 × 6 × 4 = 12 cm². Volume limas = 1/3 × luas alas × tinggi limas = 1/3 × 12 × 10 = 40 cm³.",
+img:""
+},
+
+{
+q:"Sebuah limas segiempat memiliki alas berbentuk persegi panjang berukuran 8 cm × 6 cm dan tinggi limas 9 cm. Hitung volumenya.",
+options:["144 cm³","216 cm³","432 cm³","96 cm³"],
+correct:"144 cm³",
+p:"Luas alas = 8 × 6 = 48 cm². Volume limas = 1/3 × 48 × 9 = 144 cm³.",
+img:""
+},
+
+{
+q:"Sebuah limas segitiga memiliki luas alas 12 cm² dan tiga sisi tegaknya masing-masing memiliki luas 12 cm², 10 cm², dan 14 cm². Hitung luas permukaan limas tersebut.",
+options:["46 cm²","48 cm²","50 cm²","52 cm²"],
+correct:"48 cm²",
+p:"Luas permukaan limas adalah jumlah luas alas dan seluruh sisi tegak. Luas permukaan = 12 + (12 + 10 + 14) = 12 + 36 = 48 cm².",
+img:""
+},
+
+{
+q:"Sebuah limas segiempat memiliki alas berukuran 9 cm × 4 cm dan sisi tegak masing-masing memiliki luas 20 cm², 18 cm², 22 cm², dan 19 cm². Hitung luas permukaan limas tersebut.",
+options:["128 cm²","132 cm²","115 cm²","140 cm²"],
+correct:"115 cm²",
+p:"Luas permukaan limas = luas alas + jumlah luas sisi tegak. Luas alas = 9 × 4 = 36 cm². Jumlah sisi tegak = 20 + 18 + 22 + 19 = 79 cm². Total = 36 + 79 = 115 cm².",
+img:""
+},
+
+{
+q:"Volume sebuah limas segitiga adalah 60 cm³. Jika tinggi limas 10 cm dan panjang alas segitiga 6 cm, berapakah tinggi segitiga alasnya?",
+options:["4 cm","5 cm","6 cm","8 cm"],
+correct:"6 cm",
+p:"Rumus volume limas: V = 1/3 × luas alas × tinggi limas. Diketahui 60 = 1/3 × (1/2 × 6 × t) × 10. Ini menjadi 60 = 10t sehingga t = 6 cm.",
+img:""
+}
+
+];
+
+let currentQuestion=0;
+let answered=new Array(questions.length).fill(false);
+let benar=0;
+let quizSelesai=false;
+
+/* TIMER */
+let t=3600;
+let timerInterval=setInterval(()=>{
+  if(quizSelesai)return;
+  let m=Math.floor(t/60),s=t%60;
+  if(s<10)s="0"+s;
+  timer.textContent=`Waktu: ${m}:${s}`;
+  t--;
+},1000);
+
+/* TAMPIL SOAL (✅ SAMA DENGAN CONTOH REGU) */
+function showQuestion(){
+  let q=questions[currentQuestion];
+  questionNumber.textContent=`Soal ${currentQuestion+1}`;
+  question.textContent=q.q;
+
+  if(q.img){
+    questionImg.src=q.img;
+    questionImg.style.display="block";
+  }else questionImg.style.display="none";
+
+  options.innerHTML=q.options.map((o,i)=>`
+    <button class="optionBtn btn${String.fromCharCode(65+i)}"
+      onclick="checkAnswer('${o}',this)"
+      ${answered[currentQuestion]||quizSelesai?"disabled":""}>
+      ${String.fromCharCode(65+i)}. ${o}
+    </button>`).join("");
+
+  /* ✅ INI KUNCINYA */
+  feedback.textContent = answered[currentQuestion] ? "✔ Sudah terjawab" : "";
+}
+
+/* JAWAB */
+function checkAnswer(ans,btn){
+  if(answered[currentQuestion]||quizSelesai)return;
+  answered[currentQuestion]=true;
+
+  if(ans===questions[currentQuestion].correct){
+    btn.classList.add("correct");
+    benar++;
+    feedback.textContent="✅ Benar";
+  }else{
+    btn.classList.add("wrong");
+    feedback.textContent="❌ Salah";
+  }
+
+  if(answered.every(v=>v)){
+    quizSelesai=true;
+    clearInterval(timerInterval);
+    let nilai=Math.round((benar/questions.length)*100);
+    timer.textContent=`✅ Selesai | Nilai: ${nilai}`;
+  }
+}
+
+/* NAV */
+function nextQuestion(){currentQuestion=(currentQuestion+1)%questions.length;showQuestion();}
+function prevQuestion(){currentQuestion=(currentQuestion-1+questions.length)%questions.length;showQuestion();}
+
+/* PEMBAHASAN */
+function showFocus(){
+  let q=questions[currentQuestion];
+  quiz.style.display="none";
+  focusLayer.style.display="block";
+  focusQuestion.textContent=q.q;
+
+  if(q.img){
+    focusImg.src=q.img;
+    focusImg.style.display="block";
+  }else focusImg.style.display="none";
+
+  focusOptions.innerHTML=q.options.map((o,i)=>`
+    <div class="focusOption btn${String.fromCharCode(65+i)}"
+      style="background:${o===q.correct?'#2ecc71':'#bbb'}">
+      ${String.fromCharCode(65+i)}. ${o}
+    </div>`).join("");
+
+  focusPembahasan.textContent=q.p;
+}
+function closeFocus(){
+  focusLayer.style.display="none";
+  quiz.style.display="block";
+}
+
+/* INIT */
+showQuestion();
+</script>
+
+</body>
+</html>

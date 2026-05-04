@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Kuis Matematika</title>
+
+<style>
+*{box-sizing:border-box}
+body{
+  margin:0;
+  font-family:Arial,sans-serif;
+  background:linear-gradient(135deg,#74ebd5,#ACB6E5);
+}
+.container{
+  max-width:95%;
+  margin:15px auto;
+  background:#fff;
+  padding:16px;
+  border-radius:18px;
+  text-align:center;
+}
+.timer{
+  font-size:22px;
+  font-weight:bold;
+  color:#d9534f;
+}
+.question{
+  text-align:left;
+  font-size:22px;
+  white-space:pre-line;
+  margin-top:10px;
+}
+
+/* FRAME SOAL */
+.question-frame{
+  background:#f8fbff;
+  border:3px solid #2196f3;
+  border-radius:18px;
+  padding:18px;
+  margin-top:15px;
+  box-shadow:0 6px 16px rgba(0,0,0,.1);
+}
+.question-frame::before{
+  content:"📌 Soal";
+  display:inline-block;
+  background:#2196f3;
+  color:#fff;
+  padding:4px 14px;
+  border-radius:20px;
+  font-size:14px;
+  font-weight:bold;
+  margin-bottom:10px;
+}
+
+.question-img,
+.focus-img{
+  max-width:300px;
+  border-radius:12px;
+  margin:12px auto;
+  display:none;
+}
+
+.options,.focusOptions{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:12px;
+  margin-top:16px;
+}
+.optionBtn{
+  padding:14px;
+  font-size:18px;
+  border:none;
+  border-radius:12px;
+  color:#fff;
+  font-weight:bold;
+  cursor:pointer;
+}
+.btnA{background:#1e88e5}
+.btnB{background:#43a047}
+.btnC{background:#fb8c00}
+.btnD{background:#8e24aa}
+.correct{background:#2ecc71!important}
+.wrong{background:#e74c3c!important}
+
+button{
+  margin:6px;
+  padding:10px 16px;
+  border:none;
+  border-radius:12px;
+  background:#4caf50;
+  color:#fff;
+  cursor:pointer;
+}
+
+#focusLayer{
+  display:none;
+  position:fixed;
+  inset:0;
+  background:#fff;
+  z-index:9999;
+  padding:16px;
+}
+.focusBox{max-width:800px;margin:auto}
+.focusOption{
+  padding:12px;
+  border-radius:10px;
+  color:#fff;
+  font-weight:bold;
+}
+.focusP{
+  background:#f9fbff;
+  border-left:5px solid #2196f3;
+  padding:15px;
+  border-radius:10px;
+  margin-top:12px;
+}
+
+@media(max-width:768px){
+  .options,.focusOptions{grid-template-columns:1fr}
+}
+</style>
+</head>
+
+<body>
+
+<div id="quiz" class="container">
+  <h1>🎮 Kuis Matematika</h1>
+
+  <div id="timer" class="timer"></div>
+  <div id="questionNumber"></div>
+
+  <div class="question-frame">
+    <div id="question" class="question"></div>
+    <img id="questionImg" class="question-img">
+  </div>
+
+  <div id="options" class="options"></div>
+
+  <button onclick="prevQuestion()">◀ Sebelumnya</button>
+  <button onclick="nextQuestion()">▶ Berikutnya</button>
+  <button onclick="showFocus()">📘 Pembahasan</button>
+
+  <div id="feedback"></div>
+</div>
+
+<!-- PEMBAHASAN -->
+<div id="focusLayer">
+  <div class="focusBox">
+    <div class="question-frame">
+      <div id="focusQuestion" class="question"></div>
+      <img id="focusImg" class="focus-img">
+    </div>
+    <div id="focusOptions" class="focusOptions"></div>
+    <div id="focusPembahasan" class="focusP"></div>
+    <button onclick="closeFocus()">⬅ Kembali</button>
+  </div>
+</div>
+
+<script>
+let questions=[
+{
+q:"Sebuah kubus memiliki panjang sisi 10 cm. Berapakah luas permukaan kubus tersebut?",
+options:["100 cm²","400 cm²","600 cm²","1.000 cm²"],
+correct:"600 cm²",
+p:"Luas permukaan kubus dihitung dengan rumus L = 6 × s². Dengan s = 10 cm, diperoleh L = 6 × 10² = 6 × 100 = 600 cm².",
+img:""
+},
+
+{
+q:"Sebuah balok memiliki panjang 12 cm, lebar 8 cm, dan tinggi 5 cm. Hitunglah luas permukaan balok tersebut!",
+options:["392 cm²","496 cm²","520 cm²","560 cm²"],
+correct:"392 cm²",
+p:"Rumus luas permukaan balok adalah L = 2(pl + pt + lt). Dengan p = 12, l = 8, dan t = 5 diperoleh L = 2(12×8 + 12×5 + 8×5) = 2(96 + 60 + 40) = 2 × 196 = 392 cm².",
+img:""
+},
+
+{
+q:"Jika luas permukaan sebuah kubus adalah 294 cm², berapakah panjang sisi kubus tersebut?",
+options:["6 cm","7 cm","8 cm","9 cm"],
+correct:"7 cm",
+p:"Luas permukaan kubus adalah L = 6s². Diketahui 6s² = 294, sehingga s² = 49 dan s = 7 cm.",
+img:""
+},
+
+{
+q:"Sebuah balok memiliki ukuran panjang 15 cm, lebar 10 cm, dan tinggi 6 cm. Berapakah luas permukaan balok tersebut?",
+options:["600 cm²","700 cm²","750 cm²","800 cm²"],
+correct:"600 cm²",
+p:"Gunakan rumus luas permukaan balok L = 2(pl + pt + lt). Dengan p = 15, l = 10, t = 6 diperoleh L = 2(15×10 + 15×6 + 10×6) = 2(150 + 90 + 60) = 2 × 300 = 600 cm².",
+img:""
+},
+
+{
+q:"Perhatikan pernyataan berikut:\nI. Semua sisi berbentuk persegi\nII. Luas permukaan = 6 × (sisi × sisi)\nIII. Memiliki 8 titik sudut\nBangun ruang yang dimaksud adalah ...",
+options:["Balok","Prisma","Kubus","Limas"],
+correct:"Kubus",
+p:"Ciri-ciri tersebut merupakan sifat kubus, yaitu semua sisinya berbentuk persegi, memiliki 6 sisi kongruen, 8 titik sudut, dan luas permukaan 6 × s².",
+img:""
+}
+
+];
+
+let currentQuestion=0;
+let answered=new Array(questions.length).fill(false);
+let benar=0;
+let quizSelesai=false;
+
+/* TIMER */
+let t=3600;
+let timerInterval=setInterval(()=>{
+  if(quizSelesai)return;
+  let m=Math.floor(t/60),s=t%60;
+  if(s<10)s="0"+s;
+  timer.textContent=`Waktu: ${m}:${s}`;
+  t--;
+},1000);
+
+/* TAMPIL SOAL (✅ SAMA DENGAN CONTOH REGU) */
+function showQuestion(){
+  let q=questions[currentQuestion];
+  questionNumber.textContent=`Soal ${currentQuestion+1}`;
+  question.textContent=q.q;
+
+  if(q.img){
+    questionImg.src=q.img;
+    questionImg.style.display="block";
+  }else questionImg.style.display="none";
+
+  options.innerHTML=q.options.map((o,i)=>`
+    <button class="optionBtn btn${String.fromCharCode(65+i)}"
+      onclick="checkAnswer('${o}',this)"
+      ${answered[currentQuestion]||quizSelesai?"disabled":""}>
+      ${String.fromCharCode(65+i)}. ${o}
+    </button>`).join("");
+
+  /* ✅ INI KUNCINYA */
+  feedback.textContent = answered[currentQuestion] ? "✔ Sudah terjawab" : "";
+}
+
+/* JAWAB */
+function checkAnswer(ans,btn){
+  if(answered[currentQuestion]||quizSelesai)return;
+  answered[currentQuestion]=true;
+
+  if(ans===questions[currentQuestion].correct){
+    btn.classList.add("correct");
+    benar++;
+    feedback.textContent="✅ Benar";
+  }else{
+    btn.classList.add("wrong");
+    feedback.textContent="❌ Salah";
+  }
+
+  if(answered.every(v=>v)){
+    quizSelesai=true;
+    clearInterval(timerInterval);
+    let nilai=Math.round((benar/questions.length)*100);
+    timer.textContent=`✅ Selesai | Nilai: ${nilai}`;
+  }
+}
+
+/* NAV */
+function nextQuestion(){currentQuestion=(currentQuestion+1)%questions.length;showQuestion();}
+function prevQuestion(){currentQuestion=(currentQuestion-1+questions.length)%questions.length;showQuestion();}
+
+/* PEMBAHASAN */
+function showFocus(){
+  let q=questions[currentQuestion];
+  quiz.style.display="none";
+  focusLayer.style.display="block";
+  focusQuestion.textContent=q.q;
+
+  if(q.img){
+    focusImg.src=q.img;
+    focusImg.style.display="block";
+  }else focusImg.style.display="none";
+
+  focusOptions.innerHTML=q.options.map((o,i)=>`
+    <div class="focusOption btn${String.fromCharCode(65+i)}"
+      style="background:${o===q.correct?'#2ecc71':'#bbb'}">
+      ${String.fromCharCode(65+i)}. ${o}
+    </div>`).join("");
+
+  focusPembahasan.textContent=q.p;
+}
+function closeFocus(){
+  focusLayer.style.display="none";
+  quiz.style.display="block";
+}
+
+/* INIT */
+showQuestion();
+</script>
+
+</body>
+</html>

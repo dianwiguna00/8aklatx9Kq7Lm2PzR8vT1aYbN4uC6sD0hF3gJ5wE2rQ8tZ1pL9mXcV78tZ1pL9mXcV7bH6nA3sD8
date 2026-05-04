@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Kuis Matematika</title>
+
+<style>
+*{box-sizing:border-box}
+body{
+  margin:0;
+  font-family:Arial,sans-serif;
+  background:linear-gradient(135deg,#74ebd5,#ACB6E5);
+}
+.container{
+  max-width:95%;
+  margin:15px auto;
+  background:#fff;
+  padding:16px;
+  border-radius:18px;
+  text-align:center;
+}
+.timer{
+  font-size:22px;
+  font-weight:bold;
+  color:#d9534f;
+}
+.question{
+  text-align:left;
+  font-size:22px;
+  white-space:pre-line;
+  margin-top:10px;
+}
+
+/* FRAME SOAL */
+.question-frame{
+  background:#f8fbff;
+  border:3px solid #2196f3;
+  border-radius:18px;
+  padding:18px;
+  margin-top:15px;
+  box-shadow:0 6px 16px rgba(0,0,0,.1);
+}
+.question-frame::before{
+  content:"📌 Soal";
+  display:inline-block;
+  background:#2196f3;
+  color:#fff;
+  padding:4px 14px;
+  border-radius:20px;
+  font-size:14px;
+  font-weight:bold;
+  margin-bottom:10px;
+}
+
+.question-img,
+.focus-img{
+  max-width:300px;
+  border-radius:12px;
+  margin:12px auto;
+  display:none;
+}
+
+.options,.focusOptions{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:12px;
+  margin-top:16px;
+}
+.optionBtn{
+  padding:14px;
+  font-size:18px;
+  border:none;
+  border-radius:12px;
+  color:#fff;
+  font-weight:bold;
+  cursor:pointer;
+}
+.btnA{background:#1e88e5}
+.btnB{background:#43a047}
+.btnC{background:#fb8c00}
+.btnD{background:#8e24aa}
+.correct{background:#2ecc71!important}
+.wrong{background:#e74c3c!important}
+
+button{
+  margin:6px;
+  padding:10px 16px;
+  border:none;
+  border-radius:12px;
+  background:#4caf50;
+  color:#fff;
+  cursor:pointer;
+}
+
+#focusLayer{
+  display:none;
+  position:fixed;
+  inset:0;
+  background:#fff;
+  z-index:9999;
+  padding:16px;
+}
+.focusBox{max-width:800px;margin:auto}
+.focusOption{
+  padding:12px;
+  border-radius:10px;
+  color:#fff;
+  font-weight:bold;
+}
+.focusP{
+  background:#f9fbff;
+  border-left:5px solid #2196f3;
+  padding:15px;
+  border-radius:10px;
+  margin-top:12px;
+}
+
+@media(max-width:768px){
+  .options,.focusOptions{grid-template-columns:1fr}
+}
+</style>
+</head>
+
+<body>
+
+<div id="quiz" class="container">
+  <h1>🎮 Kuis Matematika</h1>
+
+  <div id="timer" class="timer"></div>
+  <div id="questionNumber"></div>
+
+  <div class="question-frame">
+    <div id="question" class="question"></div>
+    <img id="questionImg" class="question-img">
+  </div>
+
+  <div id="options" class="options"></div>
+
+  <button onclick="prevQuestion()">◀ Sebelumnya</button>
+  <button onclick="nextQuestion()">▶ Berikutnya</button>
+  <button onclick="showFocus()">📘 Pembahasan</button>
+
+  <div id="feedback"></div>
+</div>
+
+<!-- PEMBAHASAN -->
+<div id="focusLayer">
+  <div class="focusBox">
+    <div class="question-frame">
+      <div id="focusQuestion" class="question"></div>
+      <img id="focusImg" class="focus-img">
+    </div>
+    <div id="focusOptions" class="focusOptions"></div>
+    <div id="focusPembahasan" class="focusP"></div>
+    <button onclick="closeFocus()">⬅ Kembali</button>
+  </div>
+</div>
+
+<script>
+let questions=[
+{
+q:"Seorang pedagang menjual 3 apel dan 2 jeruk seharga Rp20.000, sedangkan 2 apel dan 4 jeruk seharga Rp22.000. Jika x adalah harga apel dan y adalah harga jeruk, maka solusi SPLDV (x, y) menunjukkan ...",
+options:["Jumlah apel dan jeruk","Harga total buah","Harga masing-masing buah","Jumlah uang yang dibayarkan"],
+correct:"Harga masing-masing buah",
+p:"Pada soal, variabel x didefinisikan sebagai harga apel dan y sebagai harga jeruk. Solusi SPLDV berupa pasangan (x, y) menyatakan nilai kedua variabel tersebut, sehingga maknanya adalah harga masing-masing buah.",
+img:""
+},
+{
+q:"Dalam sebuah kelas terdapat 40 siswa. Jumlah siswa laki-laki dua kali jumlah siswa perempuan. Jika x adalah jumlah siswa laki-laki dan y adalah jumlah siswa perempuan, maka solusi SPLDV (x, y) menunjukkan ...",
+options:["Jumlah total siswa","Jumlah siswa laki-laki dan perempuan","Rasio siswa laki-laki terhadap perempuan","Jumlah siswa yang hadir"],
+correct:"Jumlah siswa laki-laki dan perempuan",
+p:"Variabel x menyatakan jumlah siswa laki-laki dan y menyatakan jumlah siswa perempuan. Oleh karena itu, solusi SPLDV (x, y) menunjukkan banyaknya siswa laki-laki dan perempuan di kelas tersebut.",
+img:""
+},
+{
+q:"Seorang ibu membeli 5 kg beras dan 2 liter minyak seharga Rp80.000. Temannya membeli 3 kg beras dan 4 liter minyak seharga Rp76.000. Jika x adalah harga beras per kg dan y adalah harga minyak per liter, maka solusi SPLDV (x, y) menunjukkan ...",
+options:["Jumlah uang yang dibayarkan","Jumlah barang yang dibeli","Harga masing-masing barang","Total berat dan volume barang"],
+correct:"Harga masing-masing barang",
+p:"Pada konteks soal, x menyatakan harga beras per kilogram dan y menyatakan harga minyak per liter. Solusi SPLDV memberikan nilai x dan y, yaitu harga masing-masing barang.",
+img:""
+},
+{
+q:"Dalam sebuah lomba, total skor dua peserta adalah 180. Skor peserta A dua kali skor peserta B. Jika x adalah skor peserta A dan y adalah skor peserta B, maka solusi SPLDV (x, y) menunjukkan ...",
+options:["Jumlah soal yang dijawab","Skor akhir lomba","Skor masing-masing peserta","Waktu pengerjaan soal"],
+correct:"Skor masing-masing peserta",
+p:"Variabel x dan y masing-masing didefinisikan sebagai skor peserta A dan peserta B. Oleh karena itu, solusi SPLDV (x, y) menunjukkan skor yang diperoleh oleh masing-masing peserta lomba.",
+img:""
+},
+{
+q:"Seorang siswa membeli 2 pensil dan 3 buku seharga Rp21.000. Temannya membeli 4 pensil dan 1 buku seharga Rp19.000. Jika x adalah harga pensil dan y adalah harga buku, maka solusi SPLDV (x, y) menunjukkan ...",
+options:["Jumlah barang yang dibeli","Harga masing-masing barang","Total harga belanja","Diskon yang diberikan"],
+correct:"Harga masing-masing barang",
+p:"Variabel x menyatakan harga satu pensil dan y menyatakan harga satu buku. Solusi SPLDV (x, y) memberikan nilai harga masing-masing barang tersebut.",
+img:""
+}
+
+];
+
+let currentQuestion=0;
+let answered=new Array(questions.length).fill(false);
+let benar=0;
+let quizSelesai=false;
+
+/* TIMER */
+let t=3600;
+let timerInterval=setInterval(()=>{
+  if(quizSelesai)return;
+  let m=Math.floor(t/60),s=t%60;
+  if(s<10)s="0"+s;
+  timer.textContent=`Waktu: ${m}:${s}`;
+  t--;
+},1000);
+
+/* TAMPIL SOAL (✅ SAMA DENGAN CONTOH REGU) */
+function showQuestion(){
+  let q=questions[currentQuestion];
+  questionNumber.textContent=`Soal ${currentQuestion+1}`;
+  question.textContent=q.q;
+
+  if(q.img){
+    questionImg.src=q.img;
+    questionImg.style.display="block";
+  }else questionImg.style.display="none";
+
+  options.innerHTML=q.options.map((o,i)=>`
+    <button class="optionBtn btn${String.fromCharCode(65+i)}"
+      onclick="checkAnswer('${o}',this)"
+      ${answered[currentQuestion]||quizSelesai?"disabled":""}>
+      ${String.fromCharCode(65+i)}. ${o}
+    </button>`).join("");
+
+  /* ✅ INI KUNCINYA */
+  feedback.textContent = answered[currentQuestion] ? "✔ Sudah terjawab" : "";
+}
+
+/* JAWAB */
+function checkAnswer(ans,btn){
+  if(answered[currentQuestion]||quizSelesai)return;
+  answered[currentQuestion]=true;
+
+  if(ans===questions[currentQuestion].correct){
+    btn.classList.add("correct");
+    benar++;
+    feedback.textContent="✅ Benar";
+  }else{
+    btn.classList.add("wrong");
+    feedback.textContent="❌ Salah";
+  }
+
+  if(answered.every(v=>v)){
+    quizSelesai=true;
+    clearInterval(timerInterval);
+    let nilai=Math.round((benar/questions.length)*100);
+    timer.textContent=`✅ Selesai | Nilai: ${nilai}`;
+  }
+}
+
+/* NAV */
+function nextQuestion(){currentQuestion=(currentQuestion+1)%questions.length;showQuestion();}
+function prevQuestion(){currentQuestion=(currentQuestion-1+questions.length)%questions.length;showQuestion();}
+
+/* PEMBAHASAN */
+function showFocus(){
+  let q=questions[currentQuestion];
+  quiz.style.display="none";
+  focusLayer.style.display="block";
+  focusQuestion.textContent=q.q;
+
+  if(q.img){
+    focusImg.src=q.img;
+    focusImg.style.display="block";
+  }else focusImg.style.display="none";
+
+  focusOptions.innerHTML=q.options.map((o,i)=>`
+    <div class="focusOption btn${String.fromCharCode(65+i)}"
+      style="background:${o===q.correct?'#2ecc71':'#bbb'}">
+      ${String.fromCharCode(65+i)}. ${o}
+    </div>`).join("");
+
+  focusPembahasan.textContent=q.p;
+}
+function closeFocus(){
+  focusLayer.style.display="none";
+  quiz.style.display="block";
+}
+
+/* INIT */
+showQuestion();
+</script>
+
+</body>
+</html>

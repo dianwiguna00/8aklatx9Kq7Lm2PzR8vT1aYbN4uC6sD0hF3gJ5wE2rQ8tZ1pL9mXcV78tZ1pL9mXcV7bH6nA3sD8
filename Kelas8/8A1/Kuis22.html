@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Kuis Matematika</title>
+
+<style>
+*{box-sizing:border-box}
+body{
+  margin:0;
+  font-family:Arial,sans-serif;
+  background:linear-gradient(135deg,#74ebd5,#ACB6E5);
+}
+.container{
+  max-width:95%;
+  margin:15px auto;
+  background:#fff;
+  padding:16px;
+  border-radius:18px;
+  text-align:center;
+}
+.timer{
+  font-size:22px;
+  font-weight:bold;
+  color:#d9534f;
+}
+.question{
+  text-align:left;
+  font-size:22px;
+  white-space:pre-line;
+  margin-top:10px;
+}
+
+/* FRAME SOAL */
+.question-frame{
+  background:#f8fbff;
+  border:3px solid #2196f3;
+  border-radius:18px;
+  padding:18px;
+  margin-top:15px;
+  box-shadow:0 6px 16px rgba(0,0,0,.1);
+}
+.question-frame::before{
+  content:"📌 Soal";
+  display:inline-block;
+  background:#2196f3;
+  color:#fff;
+  padding:4px 14px;
+  border-radius:20px;
+  font-size:14px;
+  font-weight:bold;
+  margin-bottom:10px;
+}
+
+.question-img,
+.focus-img{
+  max-width:300px;
+  border-radius:12px;
+  margin:12px auto;
+  display:none;
+}
+
+.options,.focusOptions{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:12px;
+  margin-top:16px;
+}
+.optionBtn{
+  padding:14px;
+  font-size:18px;
+  border:none;
+  border-radius:12px;
+  color:#fff;
+  font-weight:bold;
+  cursor:pointer;
+}
+.btnA{background:#1e88e5}
+.btnB{background:#43a047}
+.btnC{background:#fb8c00}
+.btnD{background:#8e24aa}
+.correct{background:#2ecc71!important}
+.wrong{background:#e74c3c!important}
+
+button{
+  margin:6px;
+  padding:10px 16px;
+  border:none;
+  border-radius:12px;
+  background:#4caf50;
+  color:#fff;
+  cursor:pointer;
+}
+
+#focusLayer{
+  display:none;
+  position:fixed;
+  inset:0;
+  background:#fff;
+  z-index:9999;
+  padding:16px;
+}
+.focusBox{max-width:800px;margin:auto}
+.focusOption{
+  padding:12px;
+  border-radius:10px;
+  color:#fff;
+  font-weight:bold;
+}
+.focusP{
+  background:#f9fbff;
+  border-left:5px solid #2196f3;
+  padding:15px;
+  border-radius:10px;
+  margin-top:12px;
+}
+
+@media(max-width:768px){
+  .options,.focusOptions{grid-template-columns:1fr}
+}
+</style>
+</head>
+
+<body>
+
+<div id="quiz" class="container">
+  <h1>🎮 Kuis Matematika</h1>
+
+  <div id="timer" class="timer"></div>
+  <div id="questionNumber"></div>
+
+  <div class="question-frame">
+    <div id="question" class="question"></div>
+    <img id="questionImg" class="question-img">
+  </div>
+
+  <div id="options" class="options"></div>
+
+  <button onclick="prevQuestion()">◀ Sebelumnya</button>
+  <button onclick="nextQuestion()">▶ Berikutnya</button>
+  <button onclick="showFocus()">📘 Pembahasan</button>
+
+  <div id="feedback"></div>
+</div>
+
+<!-- PEMBAHASAN -->
+<div id="focusLayer">
+  <div class="focusBox">
+    <div class="question-frame">
+      <div id="focusQuestion" class="question"></div>
+      <img id="focusImg" class="focus-img">
+    </div>
+    <div id="focusOptions" class="focusOptions"></div>
+    <div id="focusPembahasan" class="focusP"></div>
+    <button onclick="closeFocus()">⬅ Kembali</button>
+  </div>
+</div>
+
+<script>
+let questions=[
+{
+q:"Seorang ibu membeli 3 kg beras dan 2 liter minyak goreng seharga Rp76.000. Temannya membeli 2 kg beras dan 4 liter minyak goreng seharga Rp88.000. Berapakah harga per kg beras dan per liter minyak goreng?",
+options:["Rp16.000 dan Rp14.000","Rp14.000 dan Rp16.000","Rp15.000 dan Rp13.000","Rp13.000 dan Rp15.000"],
+correct:"Rp16.000 dan Rp14.000",
+p:"Misalkan x harga beras per kg dan y harga minyak per liter. Dari soal diperoleh sistem persamaan 3x + 2y = 76000 dan 2x + 4y = 88000. Dengan eliminasi diperoleh x = 16000 dan y = 14000. Jadi harga beras Rp16.000 per kg dan minyak Rp14.000 per liter.",
+img:""
+},
+{
+q:"Paket makanan terdiri dari nasi dan ayam. Paket A: 2 nasi dan 1 ayam = Rp25.000. Paket B: 1 nasi dan 2 ayam = Rp30.000. Berapakah harga nasi dan ayam?",
+options:["Rp10.000 dan Rp5.000","Rp5.000 dan Rp10.000","Rp15.000 dan Rp10.000","Rp20000/3 dan Rp35000/3"],
+correct:"Rp20000/3 dan Rp35000/3",
+p:"Misalkan x harga nasi dan y harga ayam. Diperoleh SPLDV 2x + y = 25000 dan x + 2y = 30000. Dengan eliminasi diperoleh x = 20000/3 dan y = 35000/3.",
+img:""
+},
+{
+q:"Seorang siswa membeli 4 buku dan 3 pensil seharga Rp43.000. Temannya membeli 2 buku dan 5 pensil seharga Rp41.000. Berapakah harga sebuah buku dan sebuah pensil?",
+options:["Rp8.000 dan Rp3.000","Rp9.000 dan Rp5.000","Rp7.000 dan Rp4.000","Rp46.000/7 dan Rp39.000/7"],
+correct:"Rp46.000/7 dan Rp39.000/7",
+p:"Misalkan x harga buku dan y harga pensil. Diperoleh SPLDV 4x + 3y = 43000 dan 2x + 5y = 41000. Dengan eliminasi diperoleh y = 39.000/7 dan x = 46.000/7..",
+img:""
+},
+{
+q:"Dalam sebuah toko, 5 kg gula dan 2 liter susu seharga Rp70.000. Sedangkan 3 kg gula dan 4 liter susu seharga Rp72.000. Berapakah harga gula per kg dan susu per liter?",
+options:["Rp10.000 dan Rp15.000","Rp12.000 dan Rp14.000","Rp11.000 dan Rp13.000","Rp68000/7 dan Rp75000/7"],
+correct:"Rp68000/7 dan Rp75000/7",
+p:"Misalkan x harga gula per kg dan y harga susu per liter. Diperoleh SPLDV 5x + 2y = 70000 dan 3x + 4y = 72000. Dengan eliminasi diperoleh x = 68000/7 dan y = 75000/7.",
+img:""
+},
+{
+q:"Seorang pelanggan membeli 2 roti dan 3 kue seharga Rp29.000. Pelanggan lain membeli 4 roti dan 1 kue seharga Rp27.000. Berapakah harga sebuah roti dan sebuah kue?",
+options:["Rp5.200 dan Rp6.200","Rp5.000 dan Rp6.000","Rp4.000 dan Rp7.000","Rp7.000 dan Rp4.000"],
+correct:"Rp5.200 dan Rp6.200",
+p:"Misalkan x harga roti dan y harga kue. Dari soal diperoleh SPLDV 2x + 3y = 29000 dan 4x + y = 27000. Dengan substitusi diperoleh x = 5.200 dan y = 6.200.",
+img:""
+}
+
+];
+
+let currentQuestion=0;
+let answered=new Array(questions.length).fill(false);
+let benar=0;
+let quizSelesai=false;
+
+/* TIMER */
+let t=3600;
+let timerInterval=setInterval(()=>{
+  if(quizSelesai)return;
+  let m=Math.floor(t/60),s=t%60;
+  if(s<10)s="0"+s;
+  timer.textContent=`Waktu: ${m}:${s}`;
+  t--;
+},1000);
+
+/* TAMPIL SOAL (✅ SAMA DENGAN CONTOH REGU) */
+function showQuestion(){
+  let q=questions[currentQuestion];
+  questionNumber.textContent=`Soal ${currentQuestion+1}`;
+  question.textContent=q.q;
+
+  if(q.img){
+    questionImg.src=q.img;
+    questionImg.style.display="block";
+  }else questionImg.style.display="none";
+
+  options.innerHTML=q.options.map((o,i)=>`
+    <button class="optionBtn btn${String.fromCharCode(65+i)}"
+      onclick="checkAnswer('${o}',this)"
+      ${answered[currentQuestion]||quizSelesai?"disabled":""}>
+      ${String.fromCharCode(65+i)}. ${o}
+    </button>`).join("");
+
+  /* ✅ INI KUNCINYA */
+  feedback.textContent = answered[currentQuestion] ? "✔ Sudah terjawab" : "";
+}
+
+/* JAWAB */
+function checkAnswer(ans,btn){
+  if(answered[currentQuestion]||quizSelesai)return;
+  answered[currentQuestion]=true;
+
+  if(ans===questions[currentQuestion].correct){
+    btn.classList.add("correct");
+    benar++;
+    feedback.textContent="✅ Benar";
+  }else{
+    btn.classList.add("wrong");
+    feedback.textContent="❌ Salah";
+  }
+
+  if(answered.every(v=>v)){
+    quizSelesai=true;
+    clearInterval(timerInterval);
+    let nilai=Math.round((benar/questions.length)*100);
+    timer.textContent=`✅ Selesai | Nilai: ${nilai}`;
+  }
+}
+
+/* NAV */
+function nextQuestion(){currentQuestion=(currentQuestion+1)%questions.length;showQuestion();}
+function prevQuestion(){currentQuestion=(currentQuestion-1+questions.length)%questions.length;showQuestion();}
+
+/* PEMBAHASAN */
+function showFocus(){
+  let q=questions[currentQuestion];
+  quiz.style.display="none";
+  focusLayer.style.display="block";
+  focusQuestion.textContent=q.q;
+
+  if(q.img){
+    focusImg.src=q.img;
+    focusImg.style.display="block";
+  }else focusImg.style.display="none";
+
+  focusOptions.innerHTML=q.options.map((o,i)=>`
+    <div class="focusOption btn${String.fromCharCode(65+i)}"
+      style="background:${o===q.correct?'#2ecc71':'#bbb'}">
+      ${String.fromCharCode(65+i)}. ${o}
+    </div>`).join("");
+
+  focusPembahasan.textContent=q.p;
+}
+function closeFocus(){
+  focusLayer.style.display="none";
+  quiz.style.display="block";
+}
+
+/* INIT */
+showQuestion();
+</script>
+
+</body>
+</html>

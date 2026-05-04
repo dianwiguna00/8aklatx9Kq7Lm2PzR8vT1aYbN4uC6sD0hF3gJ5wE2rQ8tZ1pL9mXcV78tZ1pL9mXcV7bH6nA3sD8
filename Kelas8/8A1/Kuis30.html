@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Kuis Matematika</title>
+
+<style>
+*{box-sizing:border-box}
+body{
+  margin:0;
+  font-family:Arial,sans-serif;
+  background:linear-gradient(135deg,#74ebd5,#ACB6E5);
+}
+.container{
+  max-width:95%;
+  margin:15px auto;
+  background:#fff;
+  padding:16px;
+  border-radius:18px;
+  text-align:center;
+}
+.timer{
+  font-size:22px;
+  font-weight:bold;
+  color:#d9534f;
+}
+.question{
+  text-align:left;
+  font-size:22px;
+  white-space:pre-line;
+  margin-top:10px;
+}
+
+/* FRAME SOAL */
+.question-frame{
+  background:#f8fbff;
+  border:3px solid #2196f3;
+  border-radius:18px;
+  padding:18px;
+  margin-top:15px;
+  box-shadow:0 6px 16px rgba(0,0,0,.1);
+}
+.question-frame::before{
+  content:"📌 Soal";
+  display:inline-block;
+  background:#2196f3;
+  color:#fff;
+  padding:4px 14px;
+  border-radius:20px;
+  font-size:14px;
+  font-weight:bold;
+  margin-bottom:10px;
+}
+
+.question-img,
+.focus-img{
+  max-width:300px;
+  border-radius:12px;
+  margin:12px auto;
+  display:none;
+}
+
+.options,.focusOptions{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:12px;
+  margin-top:16px;
+}
+.optionBtn{
+  padding:14px;
+  font-size:18px;
+  border:none;
+  border-radius:12px;
+  color:#fff;
+  font-weight:bold;
+  cursor:pointer;
+}
+.btnA{background:#1e88e5}
+.btnB{background:#43a047}
+.btnC{background:#fb8c00}
+.btnD{background:#8e24aa}
+.correct{background:#2ecc71!important}
+.wrong{background:#e74c3c!important}
+
+button{
+  margin:6px;
+  padding:10px 16px;
+  border:none;
+  border-radius:12px;
+  background:#4caf50;
+  color:#fff;
+  cursor:pointer;
+}
+
+#focusLayer{
+  display:none;
+  position:fixed;
+  inset:0;
+  background:#fff;
+  z-index:9999;
+  padding:16px;
+}
+.focusBox{max-width:800px;margin:auto}
+.focusOption{
+  padding:12px;
+  border-radius:10px;
+  color:#fff;
+  font-weight:bold;
+}
+.focusP{
+  background:#f9fbff;
+  border-left:5px solid #2196f3;
+  padding:15px;
+  border-radius:10px;
+  margin-top:12px;
+}
+
+@media(max-width:768px){
+  .options,.focusOptions{grid-template-columns:1fr}
+}
+</style>
+</head>
+
+<body>
+
+<div id="quiz" class="container">
+  <h1>🎮 Kuis Matematika</h1>
+
+  <div id="timer" class="timer"></div>
+  <div id="questionNumber"></div>
+
+  <div class="question-frame">
+    <div id="question" class="question"></div>
+    <img id="questionImg" class="question-img">
+  </div>
+
+  <div id="options" class="options"></div>
+
+  <button onclick="prevQuestion()">◀ Sebelumnya</button>
+  <button onclick="nextQuestion()">▶ Berikutnya</button>
+  <button onclick="showFocus()">📘 Pembahasan</button>
+
+  <div id="feedback"></div>
+</div>
+
+<!-- PEMBAHASAN -->
+<div id="focusLayer">
+  <div class="focusBox">
+    <div class="question-frame">
+      <div id="focusQuestion" class="question"></div>
+      <img id="focusImg" class="focus-img">
+    </div>
+    <div id="focusOptions" class="focusOptions"></div>
+    <div id="focusPembahasan" class="focusP"></div>
+    <button onclick="closeFocus()">⬅ Kembali</button>
+  </div>
+</div>
+
+<script>
+let questions=[
+{
+q:"Pola bilangan: 4, 7, 10, 13, ... Suku ke-15 dari pola tersebut adalah ...",
+options:["43","46","49","52"],
+correct:"46",
+p:"Pola bilangan tersebut merupakan barisan aritmetika dengan suku pertama 4 dan beda 3. Rumus suku ke-n adalah Un = a + (n-1)d = 4 + (15-1)×3 = 4 + 42 = 46. Maka jawaban yang benar adalah 46.",
+img:""
+},
+{
+q:"Diberikan relasi: {(2, 4), (3, 6), (4, 8), (5, 10)}. Apakah relasi tersebut merupakan fungsi?",
+options:["Ya, karena setiap anggota domain berpasangan tepat satu dengan kodomain","Tidak, karena ada domain yang berpasangan lebih dari satu","Tidak, karena ada kodomain yang berpasangan lebih dari satu","Tidak diketahui"],
+correct:"Ya, karena setiap anggota domain berpasangan tepat satu dengan kodomain",
+p:"Suatu relasi disebut fungsi jika setiap anggota domain berpasangan tepat satu dengan anggota kodomain. Pada relasi tersebut, setiap domain (2, 3, 4, 5) memiliki tepat satu pasangan, sehingga relasi tersebut adalah fungsi.",
+img:""
+},
+{
+q:"Tentukan persamaan garis yang melalui titik (2, 3) dan (4, 7).",
+options:["y = 2x - 1","y = x + 1","y = 3x - 3","y = 4x - 5"],
+correct:"y = 2x - 1",
+p:"Gradien garis adalah m = (7 - 3) / (4 - 2) = 2. Dengan menggunakan rumus titik-gradien: y - 3 = 2(x - 2), diperoleh y = 2x - 1 sebagai persamaan garis.",
+img:""
+},
+{
+q:"Harga 2 pensil dan 3 buku adalah Rp27.000. Harga 3 pensil dan 2 buku adalah Rp24.000. Tentukan harga satu pensil dan satu buku.",
+options:["Pensil Rp3.000, Buku Rp7.000","Pensil Rp3.600, Buku Rp6.600","Pensil Rp5.000, Buku Rp5.000","Pensil Rp6.000, Buku Rp4.000"],
+correct:"Pensil Rp3.600, Buku Rp6.600",
+p:"Misalkan x adalah harga satu pensil dan y harga satu buku. Diperoleh SPLDV: 2x + 3y = 27.000 dan 3x + 2y = 24.000. Dengan eliminasi diperoleh x = 3.600 dan y = 6.600.",
+img:""
+},
+{
+q:"Sebuah toko menjual barang dengan harga tetap Rp15.000 per unit. Grafik hubungan antara jumlah barang (x) dan total harga (y) adalah ...",
+options:["y = 15.000x","y = 15.000 + x","y = x/15.000","y = 15.000 - x"],
+correct:"y = 15.000x",
+p:"Total harga diperoleh dari harga satuan dikalikan jumlah barang. Karena harga satu unit adalah Rp15.000, maka hubungan antara jumlah barang dan total harga dinyatakan dengan persamaan y = 15.000x.",
+img:""
+}
+
+];
+
+let currentQuestion=0;
+let answered=new Array(questions.length).fill(false);
+let benar=0;
+let quizSelesai=false;
+
+/* TIMER */
+let t=3600;
+let timerInterval=setInterval(()=>{
+  if(quizSelesai)return;
+  let m=Math.floor(t/60),s=t%60;
+  if(s<10)s="0"+s;
+  timer.textContent=`Waktu: ${m}:${s}`;
+  t--;
+},1000);
+
+/* TAMPIL SOAL (✅ SAMA DENGAN CONTOH REGU) */
+function showQuestion(){
+  let q=questions[currentQuestion];
+  questionNumber.textContent=`Soal ${currentQuestion+1}`;
+  question.textContent=q.q;
+
+  if(q.img){
+    questionImg.src=q.img;
+    questionImg.style.display="block";
+  }else questionImg.style.display="none";
+
+  options.innerHTML=q.options.map((o,i)=>`
+    <button class="optionBtn btn${String.fromCharCode(65+i)}"
+      onclick="checkAnswer('${o}',this)"
+      ${answered[currentQuestion]||quizSelesai?"disabled":""}>
+      ${String.fromCharCode(65+i)}. ${o}
+    </button>`).join("");
+
+  /* ✅ INI KUNCINYA */
+  feedback.textContent = answered[currentQuestion] ? "✔ Sudah terjawab" : "";
+}
+
+/* JAWAB */
+function checkAnswer(ans,btn){
+  if(answered[currentQuestion]||quizSelesai)return;
+  answered[currentQuestion]=true;
+
+  if(ans===questions[currentQuestion].correct){
+    btn.classList.add("correct");
+    benar++;
+    feedback.textContent="✅ Benar";
+  }else{
+    btn.classList.add("wrong");
+    feedback.textContent="❌ Salah";
+  }
+
+  if(answered.every(v=>v)){
+    quizSelesai=true;
+    clearInterval(timerInterval);
+    let nilai=Math.round((benar/questions.length)*100);
+    timer.textContent=`✅ Selesai | Nilai: ${nilai}`;
+  }
+}
+
+/* NAV */
+function nextQuestion(){currentQuestion=(currentQuestion+1)%questions.length;showQuestion();}
+function prevQuestion(){currentQuestion=(currentQuestion-1+questions.length)%questions.length;showQuestion();}
+
+/* PEMBAHASAN */
+function showFocus(){
+  let q=questions[currentQuestion];
+  quiz.style.display="none";
+  focusLayer.style.display="block";
+  focusQuestion.textContent=q.q;
+
+  if(q.img){
+    focusImg.src=q.img;
+    focusImg.style.display="block";
+  }else focusImg.style.display="none";
+
+  focusOptions.innerHTML=q.options.map((o,i)=>`
+    <div class="focusOption btn${String.fromCharCode(65+i)}"
+      style="background:${o===q.correct?'#2ecc71':'#bbb'}">
+      ${String.fromCharCode(65+i)}. ${o}
+    </div>`).join("");
+
+  focusPembahasan.textContent=q.p;
+}
+function closeFocus(){
+  focusLayer.style.display="none";
+  quiz.style.display="block";
+}
+
+/* INIT */
+showQuestion();
+</script>
+
+</body>
+</html>
